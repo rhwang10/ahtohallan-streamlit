@@ -13,19 +13,24 @@ parse_emoji_name = lambda r: r["emoji_id|emoji_name"].split("|")[1]
 
 def render():
     render_emoji_alltime_data()
+    # render_emoji_date_data()
 
-@st.cache(suppress_st_warning=True, ttl=0)
 def render_emoji_alltime_data():
     tz = st.selectbox(label="Timezone", options=["US/Eastern", "US/Pacific"])
+    if st.button("Refresh cache"):
+        st.caching.clear_cache()
     data = get_alltime_data(tz)
     st.table(data)
+
+def render_emoji_date_data():
+    st.date_input("Pick a day")
 
 def get_alltime_data(tz):
 
     metadata_all_time = fetch_from_db()
 
     m = defaultdict(list)
-    for entry in metadata_all_time:
+    for entry in sorted(metadata_all_time, key=lambda item : item["count"], reverse=True):
         emoji_name = parse_emoji_name(entry)
         last_used = datetime.fromisoformat(entry["timestamp"]).replace(tzinfo=timezone.utc)
 
@@ -35,11 +40,10 @@ def get_alltime_data(tz):
 
     return pd.DataFrame(m, index=["Count", "Last Used"])
 
-# Cache values for 30 seconds to prevent crushing the DB
-@st.cache(ttl=30)
+# Cache values for 5 minutes to prevent crushing the DB
+@st.cache(suppress_st_warning=True, ttl=300, show_spinner=False)
 def fetch_from_db():
-    st.success("Cache has been refreshed!")
-    time.sleep(0.5)
+    st.success("Cache refreshed!")
     return emoji_events.get_all_emojis()
 
 render()
