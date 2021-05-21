@@ -35,10 +35,11 @@ def get_alltime_data(tz):
 
     return pd.DataFrame(m, index=["Count", "Last Used"])
 
-# Cache values for 5 minutes to prevent crushing the DB
-@st.cache(ttl=300)
+# Cache values for 30 seconds to prevent crushing the DB
+@st.cache(ttl=30)
 def fetch_from_db():
+    st.success("Cache has been refreshed!")
+    time.sleep(0.5)
     return emoji_events.get_all_emojis()
-
 
 render()
