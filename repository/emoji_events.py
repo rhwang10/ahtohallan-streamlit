@@ -1,5 +1,6 @@
 import boto3
 import os
+import streamlit as st
 
 from boto3.dynamodb.conditions import Key, Attr
 
@@ -10,12 +11,12 @@ METADATA = "METADATA"
 class EmojiEvents:
 
     def __init__(self):
-        aws_access_key = os.environ.get("AWS_ACCESS_KEY")
-        aws_secret_key = os.environ.get("AWS_SECRET_KEY")
-        table_name = os.environ.get("ELSA_EMOJI_DDB_TABLE")
+        aws_access_key = st.secrets["dynamo_credentials"]["access_key"]
+        aws_secret_key = st.secrets["dynamo_credentials"]["secret_key"]
+        table_name = st.secrets["dynamo_credentials"]["emoji_events_table_name"]
 
         if not aws_access_key or not aws_secret_key or not table_name:
-            raise Exception("Unable to initialize Dynamo client, missing AWS access key, AWS secret key, or table name. Check environmental variables")
+            raise Exception("Unable to initialize Dynamo client, missing AWS access key, AWS secret key, or table name. Check environmental variables or TOML file")
 
         dynamo = boto3.resource(
             'dynamodb',
