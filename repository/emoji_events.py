@@ -30,6 +30,13 @@ class EmojiEvents:
     def get_all_emojis(self):
         response = self.table.scan(
             FilterExpression = Attr(SK).eq(METADATA)
-        )["Items"]
+        )
 
-        return response if response else []
+        return response["Items"] if response else []
+
+
+    def get_all_emojis_by_author(self, pk, author_id):
+        response = self.table.query(
+            KeyConditionExpression=Key(PK).eq(pk) & Key(SK).begins_with(author_id)
+        )
+        return response["Items"] if response else []
