@@ -7,6 +7,8 @@ from collections import defaultdict
 from datetime import datetime, timezone
 import functools
 
+from session_state import get
+
 from repository.emoji_events import EmojiEvents
 
 emoji_events = EmojiEvents()
@@ -128,5 +130,19 @@ def fetch_author_emoji_from_db(pk, author_id):
     return emoji_events.get_all_emojis_by_author(pk, author_id)
 
 
+session_state = get(password='')
 
-render()
+if session_state.password != st.secrets["config"]["password"]:
+    pwd_placeholder = st.sidebar.empty()
+    pwd = pwd_placeholder.text_input("Password:", value="", type="password")
+    session_state.password = pwd
+    if session_state.password == st.secrets["config"]["password"]:
+        pwd_placeholder.empty()
+        render()
+    elif session_state.password == "":
+        st.error("This site is locked. Please enter the password to continue")
+    else:
+        st.error("Wrong password entered, please try again")
+
+else:
+    render()
