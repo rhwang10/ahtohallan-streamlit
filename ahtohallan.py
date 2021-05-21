@@ -22,7 +22,8 @@ AUTHOR_NAME_TO_ID = {
     "Biiig Chiiiick": "294691480029888522"
 }
 
-@st.cache(suppress_st_warning=True, ttl=1000, show_spinner=False)
+# 30 minute caching for emojis
+@st.cache(suppress_st_warning=True, ttl=1800, show_spinner=False)
 def get_available_emojis():
     data = emoji_events.get_all_emojis()
     return [row["emoji_id|emoji_name"] for row in data]
@@ -98,7 +99,7 @@ def fetch_from_db():
     return emoji_events_over_all_time
 
 # Cache values for 30 minutes to prevent crushing the DB
-@st.cache(suppress_st_warning=True, ttl=1, show_spinner=False)
+@st.cache(suppress_st_warning=True, ttl=1800, show_spinner=False)
 def fetch_all_author_emoji_data_from_db(author_id):
     author_emojis = defaultdict(list)
     for pk in CACHED_EMOJIS:
