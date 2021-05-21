@@ -5,6 +5,7 @@ import pytz
 import time
 from collections import defaultdict
 from datetime import datetime, timezone
+import functools
 
 from repository.emoji_events import EmojiEvents
 
@@ -62,12 +63,17 @@ def render_emoji_alltime_data():
 def render_author_emoji_data():
     st.header("Member usage")
     selected_author_name = st.selectbox(label="Member", options=[name for name, _ in AUTHOR_NAME_TO_ID.items()])
+    n = int(st.slider('Number of Top Emojis to show', min_value=1, max_value=10, value=5))
     selected_author_id = AUTHOR_NAME_TO_ID[selected_author_name]
 
-    author_emojis = fetch_all_author_emoji_data_from_db(selected_author_id)
+    author_emojis = get_alltime_author_data(selected_author_id)
 
-    df = pd.DataFrame(author_emojis, index=["Count", "Last Used"])
-    st.table(df)
+    top_n_emojis = sorted(author_emojis.items(), key=lambda item: item[1][0], reverse=True)[:n]
+
+    author_top_emojis = pd.DataFrame(dict(top_n_emojis), index=["Count", "Last Used"])
+
+    st.write("Top emoji usage")
+    st.table(author_top_emojis)
 
 
 def get_alltime_data(tz):
@@ -100,7 +106,7 @@ def fetch_from_db():
 
 # Cache values for 30 minutes to prevent crushing the DB
 @st.cache(suppress_st_warning=True, ttl=1800, show_spinner=False)
-def fetch_all_author_emoji_data_from_db(author_id):
+def get_alltime_author_data(author_id):
     author_emojis = defaultdict(list)
     for pk in CACHED_EMOJIS:
         emoji_name = parse_emoji_name(pk)
@@ -110,8 +116,10 @@ def fetch_all_author_emoji_data_from_db(author_id):
         if not results:
             continue
 
+        latest_ts_row = functools.reduce(lambda x, y: x if x["timestamp"] > y["timestamp"] else y, results)
+
         author_emojis[emoji_name].append(len(results))
-        last_used = datetime.fromisoformat(results[0]["timestamp"]).replace(tzinfo=timezone.utc)
+        last_used = datetime.fromisoformat(latest_ts_row["timestamp"]).replace(tzinfo=timezone.utc)
         author_emojis[emoji_name].append(last_used.astimezone(pytz.timezone(tz)).strftime("%B %d, %Y %I:%M %p"))
     st.success("Member cache refreshed!")
     return author_emojis
