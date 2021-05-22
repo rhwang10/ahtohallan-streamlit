@@ -6,10 +6,12 @@ import time
 from collections import defaultdict
 from datetime import datetime, timezone
 import functools
+import random
 
 from session_state import get
 
 from repository.emoji_events import EmojiEvents
+from constants.loading import LOADING_MESSAGES
 
 st.set_page_config(layout='wide')
 
@@ -109,8 +111,9 @@ def fetch_from_db():
     return emoji_events_over_all_time
 
 # Cache values for 30 minutes to prevent crushing the DB
-@st.cache(suppress_st_warning=True, ttl=1800, show_spinner=False)
+@st.cache(suppress_st_warning=True, ttl=1800, show_spinner=False, allow_output_mutation=True)
 def get_alltime_author_data(author_id, tz):
+    success_placeholder = st.empty()
     author_emojis = defaultdict(list)
     for pk in CACHED_EMOJIS:
         emoji_name = parse_emoji_name(pk)
@@ -121,11 +124,13 @@ def get_alltime_author_data(author_id, tz):
             continue
 
         latest_ts_row = functools.reduce(lambda x, y: x if x["timestamp"] > y["timestamp"] else y, results)
-
         author_emojis[emoji_name].append(len(results))
         last_used = datetime.fromisoformat(latest_ts_row["timestamp"]).replace(tzinfo=timezone.utc)
         author_emojis[emoji_name].append(last_used.astimezone(pytz.timezone(tz)).strftime("%B %d, %Y %I:%M %p"))
-    st.success("Member cache refreshed!")
+
+    success_placeholder.success("Member cache refreshed!")
+    time.sleep(0.7)
+    success_placeholder.empty()
     return author_emojis
 
 def fetch_author_emoji_from_db(pk, author_id):
@@ -134,23 +139,45 @@ def fetch_author_emoji_from_db(pk, author_id):
 session_state = get(password='')
 
 if session_state.password != st.secrets["config"]["password"]:
-    # pwd_placeholder = st.sidebar.empty()
-    # pwd = pwd_placeholder.text_input("Password:", value="", type="password")
-    pwd = st.text_input("Password:", value="", type="password")
+    pwd_placeholder = st.empty()
+    bar_placeholder = st.empty()
+    loading_placeholder = st.empty()
+    err_placeholder = st.empty()
+
+    pwd = pwd_placeholder.text_input("Password:", value="", type="password")
     session_state.password = pwd
     if session_state.password == st.secrets["config"]["password"]:
-        st.success("Logged in!")
+        pwd_placeholder.empty()
+        err_placeholder.empty()
+
+        # loading_msg_1 = random.choice(LOADING_MESSAGES)
+        # loading_msg_2 = random.choice(LOADING_MESSAGES)
+        # loading_msg_3 = random.choice(LOADING_MESSAGES)
+        # loading_msg_4 = random.choice(LOADING_MESSAGES)
+        #
+        # bar_placeholder.progress(0)
+        # loading_placeholder.info(loading_msg_1)
+        # for percent_complete in range(100):
+        #     time.sleep(0.1)
+        #
+        #     if percent_complete < 25:
+        #         loading_placeholder.info(loading_msg_1)
+        #     if percent_complete > 25 and percent_complete < 50:
+        #         loading_placeholder.info(loading_msg_2)
+        #     if percent_complete > 50 and percent_complete < 75:
+        #         loading_placeholder.info(loading_msg_3)
+        #     if percent_complete > 75:
+        #         loading_placeholder.info(loading_msg_4)
+        #
+        #     bar_placeholder.progress(percent_complete + 1)
+        #
+        # loading_placeholder.empty()
+        # bar_placeholder.empty()
         render()
     elif session_state.password == "":
-        st.error("This site is locked. Please enter the password to continue")
+        err_placeholder.error("This site is locked. Please enter the password to continue")
     else:
-        st.error("Wrong password entered, please try again")
+        err_placeholder.error("Wrong password entered, please try again")
 
 else:
     render()
-
-
-# my_bar = st.progress(0)
-# for percent_complete in range(100):
-#     time.sleep(0.1)
-#     my_bar.progress(percent_complete + 1)
