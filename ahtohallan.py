@@ -13,6 +13,8 @@ from session_state import get
 from repository.emoji_events import EmojiEvents
 from constants.loading import LOADING_MESSAGES
 
+import streamlit.components.v1 as components
+
 st.set_page_config(layout='wide')
 
 emoji_events = EmojiEvents()
@@ -46,6 +48,7 @@ def parse_into_object(data, obj, tz):
         obj[emoji_name].append(last_used.astimezone(pytz.timezone(tz)).strftime("%B %d, %Y %I:%M %p"))
 
 def render():
+    components.iframe(st.secrets["config"]["discord_wigit_src"], height=700)
     tz = st.selectbox(label="Timezone", options=["US/Eastern", "US/Pacific"])
     render_emoji_alltime_data(tz)
     render_author_emoji_data(tz)
