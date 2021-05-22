@@ -150,29 +150,29 @@ if session_state.password != st.secrets["config"]["password"]:
         pwd_placeholder.empty()
         err_placeholder.empty()
 
-        # loading_msg_1 = random.choice(LOADING_MESSAGES)
-        # loading_msg_2 = random.choice(LOADING_MESSAGES)
-        # loading_msg_3 = random.choice(LOADING_MESSAGES)
-        # loading_msg_4 = random.choice(LOADING_MESSAGES)
-        #
-        # bar_placeholder.progress(0)
-        # loading_placeholder.info(loading_msg_1)
-        # for percent_complete in range(100):
-        #     time.sleep(0.1)
-        #
-        #     if percent_complete < 25:
-        #         loading_placeholder.info(loading_msg_1)
-        #     if percent_complete > 25 and percent_complete < 50:
-        #         loading_placeholder.info(loading_msg_2)
-        #     if percent_complete > 50 and percent_complete < 75:
-        #         loading_placeholder.info(loading_msg_3)
-        #     if percent_complete > 75:
-        #         loading_placeholder.info(loading_msg_4)
-        #
-        #     bar_placeholder.progress(percent_complete + 1)
-        #
-        # loading_placeholder.empty()
-        # bar_placeholder.empty()
+        loading_msg_1 = random.choice(LOADING_MESSAGES)
+        loading_msg_2 = random.choice(LOADING_MESSAGES)
+        loading_msg_3 = random.choice(LOADING_MESSAGES)
+        loading_msg_4 = random.choice(LOADING_MESSAGES)
+
+        bar_placeholder.progress(0)
+        loading_placeholder.info(loading_msg_1)
+        for percent_complete in range(100):
+            time.sleep(0.1)
+
+            if percent_complete < 25:
+                loading_placeholder.info(loading_msg_1)
+            if percent_complete > 25 and percent_complete < 50:
+                loading_placeholder.info(loading_msg_2)
+            if percent_complete > 50 and percent_complete < 75:
+                loading_placeholder.info(loading_msg_3)
+            if percent_complete > 75:
+                loading_placeholder.info(loading_msg_4)
+
+            bar_placeholder.progress(percent_complete + 1)
+
+        loading_placeholder.empty()
+        bar_placeholder.empty()
         render()
     elif session_state.password == "":
         err_placeholder.error("This site is locked. Please enter the password to continue")
