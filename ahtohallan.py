@@ -23,7 +23,7 @@ parse_emoji_name = lambda r: r["emoji_id|emoji_name"].split("|")[1] if isinstanc
 AUTHOR_NAME_TO_ID = {
     "YenSid": "147812991264489472",
     "Big Bezos": "180493684557611009",
-    "Jake N' Bake": "180493684557611009",
+    "Jake N' Bake": "185987463439712257",
     "stefan": "362787354844463135",
     "ItsMike": "234159938916581397",
     "Biiig Chiiiick": "294691480029888522",
