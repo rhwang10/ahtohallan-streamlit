@@ -26,7 +26,8 @@ AUTHOR_NAME_TO_ID = {
     "Jake N' Bake": "180493684557611009",
     "stefan": "362787354844463135",
     "ItsMike": "234159938916581397",
-    "Biiig Chiiiick": "294691480029888522"
+    "Biiig Chiiiick": "294691480029888522",
+    "klaiii": "196104259496837121"
 }
 
 # 30 minute caching for emojis
@@ -106,8 +107,11 @@ def get_alltime_data(tz):
 # Cache values for 5 minutes to prevent crushing the DB
 @st.cache(suppress_st_warning=True, ttl=300, show_spinner=False)
 def fetch_from_db():
-    st.success("Cache refreshed!")
+    success_placeholder = st.empty()
     emoji_events_over_all_time = emoji_events.get_all_emojis()
+    success_placeholder.success("Member cache refreshed!")
+    time.sleep(0.7)
+    success_placeholder.empty()
     return emoji_events_over_all_time
 
 # Cache values for 30 minutes to prevent crushing the DB
