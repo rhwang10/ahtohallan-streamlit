@@ -11,6 +11,8 @@ from session_state import get
 
 from repository.emoji_events import EmojiEvents
 
+st.set_page_config(layout='wide')
+
 emoji_events = EmojiEvents()
 
 parse_emoji_name = lambda r: r["emoji_id|emoji_name"].split("|")[1] if isinstance(r, dict) else r.split("|")[1]
@@ -33,7 +35,7 @@ def get_available_emojis():
 
 CACHED_EMOJIS = get_available_emojis()
 
-def parse_into_object(data, obj):
+def parse_into_object(data, obj, tz):
     for entry in data:
         emoji_name = parse_emoji_name(entry)
         last_used = datetime.fromisoformat(entry["timestamp"]).replace(tzinfo=timezone.utc)
@@ -41,12 +43,12 @@ def parse_into_object(data, obj):
         obj[emoji_name].append(last_used.astimezone(pytz.timezone(tz)).strftime("%B %d, %Y %I:%M %p"))
 
 def render():
-    render_emoji_alltime_data()
-    render_author_emoji_data()
+    tz = st.selectbox(label="Timezone", options=["US/Eastern", "US/Pacific"])
+    render_emoji_alltime_data(tz)
+    render_author_emoji_data(tz)
 
-tz = st.selectbox(label="Timezone", options=["US/Eastern", "US/Pacific"])
+def render_emoji_alltime_data(tz):
 
-def render_emoji_alltime_data():
     if st.button("Refresh cache"):
         st.caching.clear_cache()
 
@@ -62,13 +64,13 @@ def render_emoji_alltime_data():
     st.table(lru_data)
 
 
-def render_author_emoji_data():
+def render_author_emoji_data(tz):
     st.header("Member usage")
     selected_author_name = st.selectbox(label="Member", options=[name for name, _ in AUTHOR_NAME_TO_ID.items()])
     n = int(st.slider('Number of Top Emojis to show', min_value=1, max_value=10, value=5))
     selected_author_id = AUTHOR_NAME_TO_ID[selected_author_name]
 
-    author_emojis = get_alltime_author_data(selected_author_id)
+    author_emojis = get_alltime_author_data(selected_author_id, tz)
 
     top_n_emojis = sorted(author_emojis.items(), key=lambda item: item[1][0], reverse=True)[:n]
 
@@ -89,9 +91,9 @@ def get_alltime_data(tz):
     mru = defaultdict(list)
 
 
-    parse_into_object(top_all_time, top_emojis)
-    parse_into_object(least_recently_used, lru)
-    parse_into_object(most_recently_used, mru)
+    parse_into_object(top_all_time, top_emojis, tz)
+    parse_into_object(least_recently_used, lru, tz)
+    parse_into_object(most_recently_used, mru, tz)
 
 
     return pd.DataFrame(top_emojis, index=["Count", "Last Used"]), \
@@ -108,7 +110,7 @@ def fetch_from_db():
 
 # Cache values for 30 minutes to prevent crushing the DB
 @st.cache(suppress_st_warning=True, ttl=1800, show_spinner=False)
-def get_alltime_author_data(author_id):
+def get_alltime_author_data(author_id, tz):
     author_emojis = defaultdict(list)
     for pk in CACHED_EMOJIS:
         emoji_name = parse_emoji_name(pk)
@@ -129,15 +131,15 @@ def get_alltime_author_data(author_id):
 def fetch_author_emoji_from_db(pk, author_id):
     return emoji_events.get_all_emojis_by_author(pk, author_id)
 
-
 session_state = get(password='')
 
 if session_state.password != st.secrets["config"]["password"]:
-    pwd_placeholder = st.sidebar.empty()
-    pwd = pwd_placeholder.text_input("Password:", value="", type="password")
+    # pwd_placeholder = st.sidebar.empty()
+    # pwd = pwd_placeholder.text_input("Password:", value="", type="password")
+    pwd = st.text_input("Password:", value="", type="password")
     session_state.password = pwd
     if session_state.password == st.secrets["config"]["password"]:
-        pwd_placeholder.empty()
+        st.success("Logged in!")
         render()
     elif session_state.password == "":
         st.error("This site is locked. Please enter the password to continue")
@@ -146,3 +148,9 @@ if session_state.password != st.secrets["config"]["password"]:
 
 else:
     render()
+
+
+# my_bar = st.progress(0)
+# for percent_complete in range(100):
+#     time.sleep(0.1)
+#     my_bar.progress(percent_complete + 1)
